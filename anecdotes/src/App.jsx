@@ -3,7 +3,8 @@ import {
   Routes,
   Route,
   Link,
-  useParams
+  useParams,
+  useNavigate
 } from "react-router-dom"
 
 const Menu = () => {
@@ -56,6 +57,8 @@ const About = () => (
   </div>
 )
 
+
+
 const Footer = () => (
   <div>
     Anecdote app for <a href='https://fullstackopen.com/'>Full Stack Open</a>.
@@ -104,6 +107,7 @@ const CreateNew = (props) => {
 }
 
 const App = () => {
+  const navigate = useNavigate()
   const [anecdotes, setAnecdotes] = useState([
     {
       content: 'If it hurts, do it more often',
@@ -123,9 +127,16 @@ const App = () => {
 
   const [notification, setNotification] = useState('')
 
+  const msg = (msg) => {
+    setNotification(msg)
+    setTimeout(() => {setNotification('')}, 5000)
+  }
+
   const addNew = (anecdote) => {
     anecdote.id = Math.round(Math.random() * 10000)
     setAnecdotes(anecdotes.concat(anecdote))
+    navigate('/anecdotes')
+    msg(`A new anecdote'${anecdote.content}' was created.`)
   }
 
   const anecdoteById = (id) =>
@@ -147,6 +158,7 @@ const App = () => {
     <div>
       <h1>Software anecdotes</h1>
       <Menu />
+      <p>{notification}</p>
       </div>
       <Routes>
         <Route path="/anecdotes" element={<AnecdoteList anecdotes={anecdotes} />} />
