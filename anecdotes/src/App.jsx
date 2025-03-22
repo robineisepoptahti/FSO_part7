@@ -1,4 +1,9 @@
 import { useState } from 'react'
+import {
+  Routes,
+  Route,
+  Link,
+} from "react-router-dom"
 
 const Menu = () => {
   const padding = {
@@ -6,9 +11,10 @@ const Menu = () => {
   }
   return (
     <div>
-      <a href='#' style={padding}>anecdotes</a>
-      <a href='#' style={padding}>create new</a>
-      <a href='#' style={padding}>about</a>
+      <Link to="/" style={padding} >home</Link>
+        <Link to="/anecdotes" style={padding}>anecdotes</Link>
+        <Link to="/create" style={padding}>create</Link>
+        <Link to="/about" style={padding}>about</Link>
     </div>
   )
 }
@@ -124,13 +130,18 @@ const App = () => {
 
   return (
     <div>
+    <div>
       <h1>Software anecdotes</h1>
       <Menu />
-      <AnecdoteList anecdotes={anecdotes} />
-      <About />
-      <CreateNew addNew={addNew} />
+      </div>
+      <Routes>
+        <Route path="/anecdotes" element={<AnecdoteList anecdotes={anecdotes} />} />
+        <Route path="/create" element={<CreateNew addNew={addNew}/>} />
+        <Route path="/about" element={<About/>} />
+        <Route path="/" element={<AnecdoteList anecdotes={anecdotes} />} />
+      </Routes>
       <Footer />
-    </div>
+      </div>
   )
 }
 
