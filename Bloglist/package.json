@@ -8,6 +8,7 @@
     "vitest": "^3.0.6"
   },
   "dependencies": {
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "react-redux": "^9.2.0"
   }
 }

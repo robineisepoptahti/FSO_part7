@@ -5,6 +5,12 @@ import BlogForm from './components/BlogForm'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Togglable from './components/Togglable'
+import { createStore, combineReducers } from 'redux'
+import { Provider } from 'react-redux'
+import { useSelector } from 'react-redux'
+
+import msgReducer from './reducers/msgReducer'
+import errorMsgReducer from './reducers/errorReducer'
 
 const msg = {
   color: 'green',
@@ -25,8 +31,16 @@ const error = {
   marginBottom: 10,
 }
 
-const Notification = ({ message }) => {
-  if (message === null) {
+const reducer = combineReducers({
+  messages: msgReducer,
+  errorMessages: errorMsgReducer,
+})
+
+const store = createStore(reducer)
+
+const Notification = () => {
+  const message = useSelector((state) => state.messages)
+  if (message === '') {
     return null
   }
 
@@ -37,8 +51,10 @@ const Notification = ({ message }) => {
   )
 }
 
-const ErrorNotification = ({ message }) => {
-  if (message === null) {
+const ErrorNotification = () => {
+  const message = useSelector((state) => state.errorMessages)
+  console.log(`${message}`)
+  if (message === '') {
     return null
   }
   return (
@@ -53,10 +69,8 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [newMessage, setMessage] = useState(null)
-  const [newErrorMessage, setErrorMessage] = useState(null)
-
   const blogFormRef = useRef()
+
   //Hooks
 
   useEffect(() => {
@@ -93,9 +107,9 @@ const App = () => {
       setPassword('')
       console.log('logging in with', username, password)
     } catch (exception) {
-      setErrorMessage('wrong credentials')
+      store.dispatch({ type: 'SETERROR', payload: 'wrong credentials' })
       setTimeout(() => {
-        setErrorMessage(null)
+        store.dispatch({ type: 'CLEARERROR' })
       }, 5000)
     }
   }
@@ -115,9 +129,12 @@ const App = () => {
   const removeBlog = async (blog) => {
     try {
       if (blog.user.username !== user.username) {
-        setErrorMessage('Only the user can remove blog')
+        store.dispatch({
+          type: 'SETERROR',
+          payload: 'Only the user can remove blog',
+        })
         setTimeout(() => {
-          setErrorMessage(null)
+          store.dispatch({ type: 'CLEARERROR' })
         }, 5000)
         return
       } else {
@@ -125,17 +142,17 @@ const App = () => {
           const response = await blogService.remove(blog.id)
           if (response.status === 204) {
             setBlogs(blogs.filter((blogsInList) => blog.id !== blogsInList.id))
-            setMessage(`${blog.title} removed`)
+            store.dispatch({ type: 'SET', payload: `${blog.title} removed` })
             setTimeout(() => {
-              setMessage(null)
+              store.dispatch({ type: 'CLEAR' })
             }, 5000)
           }
         }
       }
     } catch (exception) {
-      setErrorMessage('failed removing the blog')
+      store.dispatch({ type: 'SETERROR', payload: 'failed removing the blog' })
       setTimeout(() => {
-        setErrorMessage(null)
+        store.dispatch({ type: 'CLEARERROR' })
       }, 5000)
     }
   }
@@ -148,14 +165,17 @@ const App = () => {
         url: url,
       })
       setBlogs(blogs.concat(blog))
-      setMessage(`a new blog ${blog.title} by ${blog.author} added`)
+      store.dispatch({
+        type: 'SET',
+        payload: `a new blog ${blog.title} by ${blog.author} added`,
+      })
       setTimeout(() => {
-        setMessage(null)
+        store.dispatch({ type: 'CLEAR' })
       }, 5000)
     } catch (exception) {
-      setErrorMessage('wrong credentials')
+      store.dispatch({ type: 'SETERROR', payload: 'wrong credentials' })
       setTimeout(() => {
-        setErrorMessage(null)
+        store.dispatch({ type: 'CLEARERROR' })
       }, 5000)
     }
   }
@@ -163,51 +183,55 @@ const App = () => {
   //Render
   if (user === null) {
     return (
-      <div>
-        <ErrorNotification message={newErrorMessage} />
-        <LoginForm
-          username={username}
-          password={password}
-          handleUsernameChange={({ target }) => setUsername(target.value)}
-          handlePasswordChange={({ target }) => setPassword(target.value)}
-          handleSubmit={handleLogin}
-        />
-      </div>
+      <Provider store={store}>
+        <div>
+          <ErrorNotification />
+          <LoginForm
+            username={username}
+            password={password}
+            handleUsernameChange={({ target }) => setUsername(target.value)}
+            handlePasswordChange={({ target }) => setPassword(target.value)}
+            handleSubmit={handleLogin}
+          />
+        </div>
+      </Provider>
     )
   }
 
   return (
-    <div>
-      <h2>blogs</h2>
-      <ErrorNotification message={newErrorMessage} />
-      <Notification message={newMessage} />
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <p>{user.name} logged in</p>
-        <button
-          onClick={() => {
-            setUser(null)
-            window.localStorage.removeItem('loggedBlogappUser')
-          }}
-        >
-          logout
-        </button>
+    <Provider store={store}>
+      <div>
+        <h2>blogs</h2>
+        <ErrorNotification />
+        <Notification />
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <p>{user.name} logged in</p>
+          <button
+            onClick={() => {
+              setUser(null)
+              window.localStorage.removeItem('loggedBlogappUser')
+            }}
+          >
+            logout
+          </button>
+        </div>
+        <h2>create new</h2>
+        <Togglable buttonLabel="create" ref={blogFormRef}>
+          <BlogForm handleSubmit={sendBlog} />
+        </Togglable>
+        {blogs
+          .sort((a, b) => b.likes - a.likes)
+          .map((blog) => (
+            <Blog
+              key={blog.id}
+              blog={blog}
+              updateLikes={updateLikes}
+              removeBlog={removeBlog}
+              user={user}
+            />
+          ))}
       </div>
-      <h2>create new</h2>
-      <Togglable buttonLabel="create" ref={blogFormRef}>
-        <BlogForm handleSubmit={sendBlog} />
-      </Togglable>
-      {blogs
-        .sort((a, b) => b.likes - a.likes)
-        .map((blog) => (
-          <Blog
-            key={blog.id}
-            blog={blog}
-            updateLikes={updateLikes}
-            removeBlog={removeBlog}
-            user={user}
-          />
-        ))}
-    </div>
+    </Provider>
   )
 }
 
