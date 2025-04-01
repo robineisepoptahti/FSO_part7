@@ -6,11 +6,7 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import Togglable from './components/Togglable'
 import { createStore, combineReducers } from 'redux'
-import { Provider } from 'react-redux'
-import { useSelector } from 'react-redux'
-
-import msgReducer from './reducers/msgReducer'
-import errorMsgReducer from './reducers/errorReducer'
+import { useSelector, useDispatch } from 'react-redux'
 
 const msg = {
   color: 'green',
@@ -30,13 +26,6 @@ const error = {
   padding: 10,
   marginBottom: 10,
 }
-
-const reducer = combineReducers({
-  messages: msgReducer,
-  errorMessages: errorMsgReducer,
-})
-
-const store = createStore(reducer)
 
 const Notification = () => {
   const message = useSelector((state) => state.messages)
@@ -65,18 +54,20 @@ const ErrorNotification = () => {
 }
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
+  //const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const blogFormRef = useRef()
 
   //Hooks
+  const dispatch = useDispatch()
+  const blogsList = useSelector((state) => state.blogsList)
 
   useEffect(() => {
     const fetchBlogs = async () => {
       const blogs = await blogService.getAll()
-      setBlogs(blogs)
+      dispatch({ type: 'ADDBLOGS', payload: blogs })
     }
     fetchBlogs()
     keepLogged()
@@ -107,9 +98,9 @@ const App = () => {
       setPassword('')
       console.log('logging in with', username, password)
     } catch (exception) {
-      store.dispatch({ type: 'SETERROR', payload: 'wrong credentials' })
+      dispatch({ type: 'SETERROR', payload: 'wrong credentials' })
       setTimeout(() => {
-        store.dispatch({ type: 'CLEARERROR' })
+        dispatch({ type: 'CLEARERROR' })
       }, 5000)
     }
   }
@@ -121,38 +112,43 @@ const App = () => {
     }
     await blogService.update(blog.id, updatedBlog)
     blog.likes = blog.likes + 1
-    setBlogs(
-      blogs.map((blog) => (blog.id === updatedBlog.id ? updatedBlog : blog))
+    dispatch(
+      blogsList.map({
+        type: 'ADDBLOGS',
+        payload: (blog) => (blog.id === updatedBlog.id ? updatedBlog : blog),
+      })
     )
   }
 
   const removeBlog = async (blog) => {
     try {
       if (blog.user.username !== user.username) {
-        store.dispatch({
+        dispatch({
           type: 'SETERROR',
           payload: 'Only the user can remove blog',
         })
         setTimeout(() => {
-          store.dispatch({ type: 'CLEARERROR' })
+          dispatch({ type: 'CLEARERROR' })
         }, 5000)
         return
       } else {
         if (window.confirm(`remove blog ${blog.title} by ${blog.author}`)) {
           const response = await blogService.remove(blog.id)
           if (response.status === 204) {
-            setBlogs(blogs.filter((blogsInList) => blog.id !== blogsInList.id))
-            store.dispatch({ type: 'SET', payload: `${blog.title} removed` })
+            dispatch(
+              blogsList.filter((blogsInList) => blog.id !== blogsInList.id)
+            )
+            dispatch({ type: 'SET', payload: `${blog.title} removed` })
             setTimeout(() => {
-              store.dispatch({ type: 'CLEAR' })
+              dispatch({ type: 'CLEAR' })
             }, 5000)
           }
         }
       }
     } catch (exception) {
-      store.dispatch({ type: 'SETERROR', payload: 'failed removing the blog' })
+      dispatch({ type: 'SETERROR', payload: 'failed removing the blog' })
       setTimeout(() => {
-        store.dispatch({ type: 'CLEARERROR' })
+        dispatch({ type: 'CLEARERROR' })
       }, 5000)
     }
   }
@@ -164,18 +160,21 @@ const App = () => {
         author: author,
         url: url,
       })
-      setBlogs(blogs.concat(blog))
-      store.dispatch({
+      dispatch({
+        type: 'ADDBLOGS',
+        payload: blogsList.concat(blog),
+      })
+      dispatch({
         type: 'SET',
         payload: `a new blog ${blog.title} by ${blog.author} added`,
       })
       setTimeout(() => {
-        store.dispatch({ type: 'CLEAR' })
+        dispatch({ type: 'CLEAR' })
       }, 5000)
     } catch (exception) {
-      store.dispatch({ type: 'SETERROR', payload: 'wrong credentials' })
+      dispatch({ type: 'SETERROR', payload: 'wrong credentials' })
       setTimeout(() => {
-        store.dispatch({ type: 'CLEARERROR' })
+        dispatch({ type: 'CLEARERROR' })
       }, 5000)
     }
   }
@@ -183,55 +182,51 @@ const App = () => {
   //Render
   if (user === null) {
     return (
-      <Provider store={store}>
-        <div>
-          <ErrorNotification />
-          <LoginForm
-            username={username}
-            password={password}
-            handleUsernameChange={({ target }) => setUsername(target.value)}
-            handlePasswordChange={({ target }) => setPassword(target.value)}
-            handleSubmit={handleLogin}
-          />
-        </div>
-      </Provider>
+      <div>
+        <ErrorNotification />
+        <LoginForm
+          username={username}
+          password={password}
+          handleUsernameChange={({ target }) => setUsername(target.value)}
+          handlePasswordChange={({ target }) => setPassword(target.value)}
+          handleSubmit={handleLogin}
+        />
+      </div>
     )
   }
 
   return (
-    <Provider store={store}>
-      <div>
-        <h2>blogs</h2>
-        <ErrorNotification />
-        <Notification />
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <p>{user.name} logged in</p>
-          <button
-            onClick={() => {
-              setUser(null)
-              window.localStorage.removeItem('loggedBlogappUser')
-            }}
-          >
-            logout
-          </button>
-        </div>
-        <h2>create new</h2>
-        <Togglable buttonLabel="create" ref={blogFormRef}>
-          <BlogForm handleSubmit={sendBlog} />
-        </Togglable>
-        {blogs
-          .sort((a, b) => b.likes - a.likes)
-          .map((blog) => (
-            <Blog
-              key={blog.id}
-              blog={blog}
-              updateLikes={updateLikes}
-              removeBlog={removeBlog}
-              user={user}
-            />
-          ))}
+    <div>
+      <h2>blogs</h2>
+      <ErrorNotification />
+      <Notification />
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <p>{user.name} logged in</p>
+        <button
+          onClick={() => {
+            setUser(null)
+            window.localStorage.removeItem('loggedBlogappUser')
+          }}
+        >
+          logout
+        </button>
       </div>
-    </Provider>
+      <h2>create new</h2>
+      <Togglable buttonLabel="create" ref={blogFormRef}>
+        <BlogForm handleSubmit={sendBlog} />
+      </Togglable>
+      {blogsList
+        .sort((a, b) => b.likes - a.likes)
+        .map((blog) => (
+          <Blog
+            key={blog.id}
+            blog={blog}
+            updateLikes={updateLikes}
+            removeBlog={removeBlog}
+            user={user}
+          />
+        ))}
+    </div>
   )
 }
 
