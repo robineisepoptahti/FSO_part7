@@ -71,7 +71,7 @@ const App = () => {
     }
     fetchBlogs()
     keepLogged()
-  }, [])
+  }, [dispatch])
 
   //Handlers
 
@@ -111,13 +111,10 @@ const App = () => {
       likes: blog.likes + 1,
     }
     await blogService.update(blog.id, updatedBlog)
-    blog.likes = blog.likes + 1
-    dispatch(
-      blogsList.map({
-        type: 'ADDBLOGS',
-        payload: (blog) => (blog.id === updatedBlog.id ? updatedBlog : blog),
-      })
-    )
+    dispatch({
+      type: 'ADDLIKE',
+      payload: blog.id,
+    })
   }
 
   const removeBlog = async (blog) => {
@@ -135,9 +132,10 @@ const App = () => {
         if (window.confirm(`remove blog ${blog.title} by ${blog.author}`)) {
           const response = await blogService.remove(blog.id)
           if (response.status === 204) {
-            dispatch(
-              blogsList.filter((blogsInList) => blog.id !== blogsInList.id)
-            )
+            dispatch({
+              type: 'REMOVEBLOG',
+              payload: blog.id,
+            })
             dispatch({ type: 'SET', payload: `${blog.title} removed` })
             setTimeout(() => {
               dispatch({ type: 'CLEAR' })
