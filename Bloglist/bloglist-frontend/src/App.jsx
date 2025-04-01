@@ -54,15 +54,14 @@ const ErrorNotification = () => {
 }
 
 const App = () => {
-  //const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
   const blogFormRef = useRef()
 
   //Hooks
   const dispatch = useDispatch()
   const blogsList = useSelector((state) => state.blogsList)
+  const user = useSelector((state) => state.user)
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -74,13 +73,12 @@ const App = () => {
   }, [dispatch])
 
   //Handlers
-
   const keepLogged = async () => {
     const credentialsJson = window.localStorage.getItem('loggedBlogappUser')
     if (credentialsJson) {
       const decodedCredentials = JSON.parse(credentialsJson)
       blogService.setToken(decodedCredentials.token)
-      setUser(decodedCredentials)
+      dispatch({ type: 'ADDUSER', payload: decodedCredentials })
     }
   }
 
@@ -93,7 +91,7 @@ const App = () => {
       })
       window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
       blogService.setToken(user.token)
-      setUser(user)
+      dispatch({ type: 'ADDUSER', payload: user })
       setUsername('')
       setPassword('')
       console.log('logging in with', username, password)
@@ -202,7 +200,7 @@ const App = () => {
         <p>{user.name} logged in</p>
         <button
           onClick={() => {
-            setUser(null)
+            dispatch({ type: 'REMOVEUSER' })
             window.localStorage.removeItem('loggedBlogappUser')
           }}
         >
