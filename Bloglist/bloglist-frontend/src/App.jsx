@@ -5,8 +5,8 @@ import BlogForm from './components/BlogForm'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Togglable from './components/Togglable'
-import { createStore, combineReducers } from 'redux'
 import { useSelector, useDispatch } from 'react-redux'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 const msg = {
   color: 'green',
@@ -62,6 +62,7 @@ const App = () => {
   const dispatch = useDispatch()
   const blogsList = useSelector((state) => state.blogsList)
   const user = useSelector((state) => state.user)
+  const users = useSelector((state) => state.users)
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -156,6 +157,7 @@ const App = () => {
         author: author,
         url: url,
       })
+      const res = await blogService.addToUser(user.id, blog.id)
       dispatch({
         type: 'ADDBLOGS',
         payload: blogsList.concat(blog),
@@ -175,6 +177,37 @@ const App = () => {
     }
   }
 
+  const UsersView = () => {
+    useEffect(() => {
+      const fetchUsers = async () => {
+        const data = await blogService.getAllUsers()
+        dispatch({ type: 'ADDUSERS', payload: data })
+      }
+      fetchUsers()
+    }, [])
+    return (
+      <div>
+        <h2>Users</h2>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Blogs created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td>{user.name}</td>
+                <td>{user.blogs.length} </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   //Render
   if (user === null) {
     return (
@@ -191,38 +224,52 @@ const App = () => {
     )
   }
 
-  return (
-    <div>
-      <h2>blogs</h2>
-      <ErrorNotification />
-      <Notification />
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <p>{user.name} logged in</p>
-        <button
-          onClick={() => {
-            dispatch({ type: 'REMOVEUSER' })
-            window.localStorage.removeItem('loggedBlogappUser')
-          }}
-        >
-          logout
-        </button>
+  const BlogsView = () => {
+    return (
+      <div>
+        <h2>create new</h2>
+        <Togglable buttonLabel="create" ref={blogFormRef}>
+          <BlogForm handleSubmit={sendBlog} />
+        </Togglable>
+        {blogsList
+          .sort((a, b) => b.likes - a.likes)
+          .map((blog) => (
+            <Blog
+              key={blog.id}
+              blog={blog}
+              updateLikes={updateLikes}
+              removeBlog={removeBlog}
+              user={user}
+            />
+          ))}
       </div>
-      <h2>create new</h2>
-      <Togglable buttonLabel="create" ref={blogFormRef}>
-        <BlogForm handleSubmit={sendBlog} />
-      </Togglable>
-      {blogsList
-        .sort((a, b) => b.likes - a.likes)
-        .map((blog) => (
-          <Blog
-            key={blog.id}
-            blog={blog}
-            updateLikes={updateLikes}
-            removeBlog={removeBlog}
-            user={user}
-          />
-        ))}
-    </div>
+    )
+  }
+
+  return (
+    <Router>
+      <div>
+        <h2>blogs</h2>
+        <ErrorNotification />
+        <Notification />
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <p>{user.name} logged in</p>
+          <button
+            onClick={() => {
+              dispatch({ type: 'REMOVEUSER' })
+              window.localStorage.removeItem('loggedBlogappUser')
+            }}
+          >
+            logout
+          </button>
+        </div>
+
+        <Routes>
+          <Route path="/users" element={<UsersView />} />
+          <Route path="/" element={<BlogsView />} />
+        </Routes>
+      </div>
+    </Router>
   )
 }
 

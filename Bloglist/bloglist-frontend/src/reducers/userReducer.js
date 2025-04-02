@@ -1,4 +1,4 @@
-const usersReducer = (state = [], action) => {
+const userReducer = (state = [], action) => {
   if (action.type === 'ADDUSER') {
     return action.payload
   } else if (action.type === 'REMOVEUSER') {
@@ -7,4 +7,4 @@ const usersReducer = (state = [], action) => {
   return state
 }
 
-export default usersReducer
+export default userReducer

@@ -36,4 +36,24 @@ usersRouter.post('/', async (request, response) => {
   response.status(201).json(savedUser)
 })
 
+usersRouter.put('/:id', async (request, response) => {
+  try {
+    const userId = request.params.id
+    const { blogId } = request.body
+    console.log(`${blogId}`)
+    console.log(`${userId}`)
+    const res = await User.findByIdAndUpdate(
+      userId,
+      { $push: { blogs: blogId } },
+      {
+        new: true,
+      }
+    )
+    response.json(res)
+  } catch (error) {
+    console.error('Error updating blog:', error)
+    response.status(400).json({ error: 'invalid data' })
+  }
+})
+
 module.exports = usersRouter

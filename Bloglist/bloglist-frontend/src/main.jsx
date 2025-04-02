@@ -5,14 +5,16 @@ import { createStore, combineReducers } from 'redux'
 import msgReducer from './reducers/msgReducer'
 import errorMsgReducer from './reducers/errorReducer'
 import blogsReducer from './reducers/blogsReducer'
-import usersReducer from './reducers/userReducer'
+import userReducer from './reducers/userReducer'
+import usersReducer from './reducers/usersReducer'
 import { composeWithDevTools } from 'redux-devtools-extension'
 
 const reducer = combineReducers({
   messages: msgReducer,
   errorMessages: errorMsgReducer,
   blogsList: blogsReducer,
-  user: usersReducer,
+  user: userReducer,
+  users: usersReducer,
 })
 
 const store = createStore(reducer, composeWithDevTools())
