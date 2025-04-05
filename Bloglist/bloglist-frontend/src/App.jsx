@@ -237,8 +237,7 @@ const App = () => {
   const BlogsView = () => {
     return (
       <div>
-        <h2>create new</h2>
-        <Togglable buttonLabel="create" ref={blogFormRef}>
+        <Togglable buttonLabel="create new" ref={blogFormRef}>
           <BlogForm handleSubmit={sendBlog} />
         </Togglable>
         {blogsList
@@ -284,14 +283,42 @@ const App = () => {
     } else return <p>No user found with given id...</p>
   }
 
+  const BlogView = () => {
+    const showRemove = () => {
+      if (blogToDisplay.user.username === user.username) {
+        return <button onClick={() => removeBlog(blogToDisplay)}>remove</button>
+      } else {
+        return null
+      }
+    }
+    const id = useParams().id
+    const blogToDisplay = blogsList.find((n) => n.id === id)
+    if (blogToDisplay) {
+      return (
+        <div>
+          <h2>{blogToDisplay.title}</h2>
+          <p>
+            <a href={`${blogToDisplay.title}`}>{`${blogToDisplay.title}`}</a>
+            <br></br>
+            {blogToDisplay.likes} likes{' '}
+            <button onClick={() => updateLikes(blogToDisplay)}>like</button>{' '}
+            <br></br>added by {blogToDisplay.author}
+            <br></br>
+            {showRemove()}
+          </p>
+        </div>
+      )
+    } else return <p>No user found with given id...</p>
+  }
+
   return (
     <Router>
       <div>
         <h2>blogs</h2>
         <ErrorNotification />
         <Notification />
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <p>{user.name} logged in</p>
+        <div style={{ alignItems: 'center' }}>
+          <p>{user.name} logged in </p>
           <button
             onClick={() => {
               dispatch({ type: 'REMOVEUSER' })
@@ -306,6 +333,7 @@ const App = () => {
           <Route path="/users" element={<UsersView />} />
           <Route path="/" element={<BlogsView />} />
           <Route path="/users/:id" element={<UserView />} />
+          <Route path="/blogs/:id" element={<BlogView />} />
         </Routes>
       </div>
     </Router>
