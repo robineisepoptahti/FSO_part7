@@ -317,8 +317,20 @@ const App = () => {
         <h2>blogs</h2>
         <ErrorNotification />
         <Notification />
-        <div style={{ alignItems: 'center' }}>
-          <p>{user.name} logged in </p>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: 'gray',
+          }}
+        >
+          <Link to={'/'} style={{ marginRight: '5px' }}>
+            blogs
+          </Link>
+          <Link to={'/users'} style={{ marginRight: '5px' }}>
+            users
+          </Link>
+          <p style={{ marginRight: '5px' }}>{user.name} logged in </p>
           <button
             onClick={() => {
               dispatch({ type: 'REMOVEUSER' })
