@@ -6,7 +6,13 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import Togglable from './components/Togglable'
 import { useSelector, useDispatch } from 'react-redux'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useParams,
+  Link,
+} from 'react-router-dom'
 
 const msg = {
   color: 'green',
@@ -183,7 +189,9 @@ const App = () => {
         const data = await blogService.getAllUsers()
         dispatch({ type: 'ADDUSERS', payload: data })
       }
-      fetchUsers()
+      if (users.length === 0) {
+        fetchUsers()
+      }
     }, [])
     return (
       <div>
@@ -196,10 +204,12 @@ const App = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.name}</td>
-                <td>{user.blogs.length} </td>
+            {users.map((userThis) => (
+              <tr key={userThis.id}>
+                <td>
+                  <Link to={`/users/${userThis.id}`}>{userThis.name}</Link>
+                </td>
+                <td>{userThis.blogs.length} </td>
               </tr>
             ))}
           </tbody>
@@ -246,6 +256,34 @@ const App = () => {
     )
   }
 
+  const UserView = () => {
+    useEffect(() => {
+      const fetchUsers = async () => {
+        if (users.length === 0) {
+          const data = await blogService.getAllUsers()
+          dispatch({ type: 'ADDUSERS', payload: data })
+          console.log('OKOK')
+        }
+      }
+      fetchUsers()
+    }, [])
+    const id = useParams().id
+    const userToDisplay = users.find((n) => n.id === id)
+    if (userToDisplay) {
+      return (
+        <div>
+          <h2>{userToDisplay.name}</h2>
+          <h3>Added blogs</h3>
+          <ul>
+            {userToDisplay.blogs.map((blog) => (
+              <li key={blog.id}>{blog.title}</li>
+            ))}
+          </ul>
+        </div>
+      )
+    } else return <p>No user found with given id...</p>
+  }
+
   return (
     <Router>
       <div>
@@ -267,6 +305,7 @@ const App = () => {
         <Routes>
           <Route path="/users" element={<UsersView />} />
           <Route path="/" element={<BlogsView />} />
+          <Route path="/users/:id" element={<UserView />} />
         </Routes>
       </div>
     </Router>
