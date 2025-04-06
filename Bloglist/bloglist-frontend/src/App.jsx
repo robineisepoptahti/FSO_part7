@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import LoginForm from './components/LoginForm'
 import BlogForm from './components/BlogForm'
+import Comments from './components/Comments'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Togglable from './components/Togglable'
@@ -284,6 +285,18 @@ const App = () => {
   }
 
   const BlogView = () => {
+    const id = useParams().id
+    const blogToDisplay = blogsList.find((n) => n.id === id)
+
+    const [comments, setComments] = useState(
+      blogToDisplay ? blogToDisplay.comments : []
+    )
+
+    const updateComments = async (comment) => {
+      const newBlog = { ...blogToDisplay, comments: comments.concat(comment) }
+      await blogService.update(blogToDisplay.id, newBlog)
+      setComments(newBlog.comments)
+    }
     const showRemove = () => {
       if (blogToDisplay.user.username === user.username) {
         return <button onClick={() => removeBlog(blogToDisplay)}>remove</button>
@@ -291,8 +304,7 @@ const App = () => {
         return null
       }
     }
-    const id = useParams().id
-    const blogToDisplay = blogsList.find((n) => n.id === id)
+
     if (blogToDisplay) {
       return (
         <div>
@@ -303,7 +315,14 @@ const App = () => {
             {blogToDisplay.likes} likes{' '}
             <button onClick={() => updateLikes(blogToDisplay)}>like</button>{' '}
             <br></br>added by {blogToDisplay.author}
-            <br></br>
+            <Comments updateComments={updateComments} />
+            <ul>
+              {comments.map((comment) => (
+                <div key={comment}>
+                  <li>{comment}</li>
+                </div>
+              ))}
+            </ul>
             {showRemove()}
           </p>
         </div>

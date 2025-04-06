@@ -52,6 +52,7 @@ notesRouter.put('/:id', async (request, response) => {
       author: body.author,
       url: body.url,
       likes: body.likes,
+      comments: body.comments,
     }
     const res = await Blog.findByIdAndUpdate(request.params.id, updatedBlog, {
       new: true,
