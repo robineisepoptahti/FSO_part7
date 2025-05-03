@@ -3,6 +3,7 @@ import Blog from './components/Blog'
 import LoginForm from './components/LoginForm'
 import BlogForm from './components/BlogForm'
 import Comments from './components/Comments'
+import NavbarField from './components/NavbarField'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Togglable from './components/Togglable'
@@ -14,25 +15,8 @@ import {
   useParams,
   Link,
 } from 'react-router-dom'
-
-const msg = {
-  color: 'green',
-  background: 'lightgrey',
-  fontSize: 18,
-  borderStyle: 'solid',
-  borderRadius: 5,
-  padding: 10,
-  marginBottom: 10,
-}
-const error = {
-  color: 'red',
-  background: 'lightgrey',
-  fontSize: 18,
-  borderStyle: 'solid',
-  borderRadius: 5,
-  padding: 10,
-  marginBottom: 10,
-}
+import { Table, Alert, ListGroup } from 'react-bootstrap'
+import { Button } from './components/styles'
 
 const Notification = () => {
   const message = useSelector((state) => state.messages)
@@ -41,22 +25,21 @@ const Notification = () => {
   }
 
   return (
-    <div style={msg} className="msg">
-      {message}
-    </div>
+    <Alert variant="success">
+      <div className="msg">{message}</div>
+    </Alert>
   )
 }
 
 const ErrorNotification = () => {
   const message = useSelector((state) => state.errorMessages)
-  console.log(`${message}`)
   if (message === '') {
     return null
   }
   return (
-    <div style={error} className="error">
-      {message}
-    </div>
+    <Alert variant="danger">
+      <div className="error">{message}</div>
+    </Alert>
   )
 }
 
@@ -197,10 +180,10 @@ const App = () => {
     return (
       <div>
         <h2>Users</h2>
-        <table>
+        <Table>
           <thead>
             <tr>
-              <th></th>
+              <th>Users</th>
               <th>Blogs created</th>
             </tr>
           </thead>
@@ -214,7 +197,7 @@ const App = () => {
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
     )
   }
@@ -241,17 +224,21 @@ const App = () => {
         <Togglable buttonLabel="create new" ref={blogFormRef}>
           <BlogForm handleSubmit={sendBlog} />
         </Togglable>
-        {blogsList
-          .sort((a, b) => b.likes - a.likes)
-          .map((blog) => (
-            <Blog
-              key={blog.id}
-              blog={blog}
-              updateLikes={updateLikes}
-              removeBlog={removeBlog}
-              user={user}
-            />
-          ))}
+        <Table striped>
+          <tbody>
+            {blogsList
+              .sort((a, b) => b.likes - a.likes)
+              .map((blog) => (
+                <Blog
+                  key={blog.id}
+                  blog={blog}
+                  updateLikes={updateLikes}
+                  removeBlog={removeBlog}
+                  user={user}
+                />
+              ))}
+          </tbody>
+        </Table>
       </div>
     )
   }
@@ -272,13 +259,17 @@ const App = () => {
     if (userToDisplay) {
       return (
         <div>
-          <h2>{userToDisplay.name}</h2>
+          <h2 style={{ marginBottom: '30px', marginTop: '30px' }}>
+            {userToDisplay.name}
+          </h2>
           <h3>Added blogs</h3>
-          <ul>
-            {userToDisplay.blogs.map((blog) => (
-              <li key={blog.id}>{blog.title}</li>
-            ))}
-          </ul>
+          <div>
+            <ListGroup>
+              {userToDisplay.blogs.map((blog) => (
+                <ListGroup.Item key={blog.id}>{blog.title}</ListGroup.Item>
+              ))}
+            </ListGroup>
+          </div>
         </div>
       )
     } else return <p>No user found with given id...</p>
@@ -299,7 +290,7 @@ const App = () => {
     }
     const showRemove = () => {
       if (blogToDisplay.user.username === user.username) {
-        return <button onClick={() => removeBlog(blogToDisplay)}>remove</button>
+        return <Button onClick={() => removeBlog(blogToDisplay)}>remove</Button>
       } else {
         return null
       }
@@ -309,22 +300,20 @@ const App = () => {
       return (
         <div>
           <h2>{blogToDisplay.title}</h2>
-          <p>
-            <a href={`${blogToDisplay.title}`}>{`${blogToDisplay.title}`}</a>
-            <br></br>
-            {blogToDisplay.likes} likes{' '}
-            <button onClick={() => updateLikes(blogToDisplay)}>like</button>{' '}
-            <br></br>added by {blogToDisplay.author}
-            <Comments updateComments={updateComments} />
-            <ul>
-              {comments.map((comment) => (
-                <div key={comment}>
-                  <li>{comment}</li>
-                </div>
-              ))}
-            </ul>
-            {showRemove()}
-          </p>
+          <a href={`${blogToDisplay.title}`}>{`${blogToDisplay.title}`}</a>
+          <br></br>
+          Likes: {blogToDisplay.likes}{' '}
+          <Button onClick={() => updateLikes(blogToDisplay)}>like</Button>{' '}
+          <br></br>Added by: {blogToDisplay.author}
+          <Comments updateComments={updateComments} />
+          <ListGroup>
+            {comments.map((comment) => (
+              <div key={comment}>
+                <ListGroup.Item>{comment}</ListGroup.Item>
+              </div>
+            ))}
+          </ListGroup>
+          {showRemove()}
         </div>
       )
     } else return <p>No user found with given id...</p>
@@ -332,33 +321,11 @@ const App = () => {
 
   return (
     <Router>
-      <div>
-        <h2>blogs</h2>
+      <div className="container">
+        <h2 style={{ marginBottom: '15px' }}>Blogs</h2>
         <ErrorNotification />
         <Notification />
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'gray',
-          }}
-        >
-          <Link to={'/'} style={{ marginRight: '5px' }}>
-            blogs
-          </Link>
-          <Link to={'/users'} style={{ marginRight: '5px' }}>
-            users
-          </Link>
-          <p style={{ marginRight: '5px' }}>{user.name} logged in </p>
-          <button
-            onClick={() => {
-              dispatch({ type: 'REMOVEUSER' })
-              window.localStorage.removeItem('loggedBlogappUser')
-            }}
-          >
-            logout
-          </button>
-        </div>
+        <NavbarField user={user.name} />
 
         <Routes>
           <Route path="/users" element={<UsersView />} />

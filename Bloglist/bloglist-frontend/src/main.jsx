@@ -8,6 +8,7 @@ import blogsReducer from './reducers/blogsReducer'
 import userReducer from './reducers/userReducer'
 import usersReducer from './reducers/usersReducer'
 import { composeWithDevTools } from 'redux-devtools-extension'
+import { Container } from './components/styles'
 
 const reducer = combineReducers({
   messages: msgReducer,
@@ -20,7 +21,9 @@ const reducer = combineReducers({
 const store = createStore(reducer, composeWithDevTools())
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <Provider store={store}>
-    <App />
-  </Provider>
+  <Container>
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </Container>
 )

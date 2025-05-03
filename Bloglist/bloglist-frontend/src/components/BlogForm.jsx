@@ -1,5 +1,8 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
+import { Button } from './styles'
+import { Input } from './styles'
+
 const BlogForm = ({ handleSubmit }) => {
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
@@ -15,11 +18,11 @@ const BlogForm = ({ handleSubmit }) => {
 
   return (
     <div>
-      <div>
+      <div style={{ alignItems: 'center', marginTop: '40px' }}>
         <form onSubmit={onSubmit}>
           <div>
-            title
-            <input
+            Title:
+            <Input
               data-testid="title"
               type="text"
               value={title}
@@ -28,8 +31,8 @@ const BlogForm = ({ handleSubmit }) => {
             />
           </div>
           <div>
-            author
-            <input
+            Author:
+            <Input
               data-testid="author"
               type="text"
               value={author}
@@ -38,8 +41,8 @@ const BlogForm = ({ handleSubmit }) => {
             />
           </div>
           <div>
-            url
-            <input
+            URL:
+            <Input
               data-testid="url"
               type="text"
               value={url}
@@ -47,7 +50,7 @@ const BlogForm = ({ handleSubmit }) => {
               onChange={(event) => setUrl(event.target.value)}
             />
           </div>
-          <button>submit</button>
+          <Button>submit</Button>
         </form>
       </div>
     </div>

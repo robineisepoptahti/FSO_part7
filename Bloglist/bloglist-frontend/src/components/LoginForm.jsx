@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types'
+import { Button, Input } from './styles'
 
 const LoginForm = ({
   username,
@@ -12,8 +13,8 @@ const LoginForm = ({
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
         <div>
-          username
-          <input
+          username:
+          <Input
             data-testid="username"
             type="text"
             value={username}
@@ -22,8 +23,8 @@ const LoginForm = ({
           />
         </div>
         <div>
-          password
-          <input
+          password:
+          <Input
             data-testid="password"
             type="password"
             value={password}
@@ -31,7 +32,7 @@ const LoginForm = ({
             onChange={handlePasswordChange}
           />
         </div>
-        <button type="submit">login</button>
+        <Button type="submit">login</Button>
       </form>
     </div>
   )

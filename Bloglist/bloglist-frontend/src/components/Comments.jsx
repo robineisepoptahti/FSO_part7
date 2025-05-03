@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button } from './styles'
 
 const Comments = ({ updateComments }) => {
   const [comment, setComment] = useState('')
@@ -11,7 +12,7 @@ const Comments = ({ updateComments }) => {
   return (
     <div>
       <form onSubmit={onSubmit}>
-        <h3>comments</h3>
+        <h3 style={{ paddingTop: '30px' }}>Comments</h3>
         <input
           style={{ padding: 0 }}
           data-testid="comment"
@@ -20,7 +21,7 @@ const Comments = ({ updateComments }) => {
           name="Comment"
           onChange={(event) => setComment(event.target.value)}
         />
-        <button>add comment</button>
+        <Button>add comment</Button>
       </form>
     </div>
   )
